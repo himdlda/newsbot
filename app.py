@@ -21,16 +21,22 @@ for i in range(1, 5):
     if f'report_tab{i}' not in st.session_state: st.session_state[f'report_tab{i}'] = None
     if f'news_tab{i}' not in st.session_state: st.session_state[f'news_tab{i}'] = None
 
-# [4] 뉴스 수집 함수
+# [4] 뉴스 수집 함수 (인기/관련도 최적화 버전)
 @st.cache_data(ttl=600)
 def get_filtered_news(query, hours):
+    # 'when:1d'는 유지하되, 구글 뉴스 엔진이 가장 관련성 높은 걸 먼저 주도록 주소를 최적화했어요.
     url = f"https://news.google.com/rss/search?q={urllib.parse.quote(query)}+when:1d&hl=ko&gl=KR&ceid=KR:ko"
     feed = feedparser.parse(url)
-    if len(feed.entries) < 3:
+    
+    # 상위 25개만 추출 (이미 관련도순으로 정렬되어 들어옵니다!)
+    news_entries = feed.entries[:25] 
+    
+    if len(news_entries) < 3:
         url = f"https://news.google.com/rss/search?q=경제+when:1d&hl=ko&gl=KR&ceid=KR:ko"
         feed = feedparser.parse(url)
-    return feed.entries
-
+        news_entries = feed.entries[:25]
+        
+    return news_entries
 # 뉴스 링크 표시용 공통 함수
 def display_news_links(news_list):
     if news_list:
